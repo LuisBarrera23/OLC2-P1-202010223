@@ -1,7 +1,9 @@
-import imp
 from tkinter import *
 from tkinter import filedialog, messagebox
 import tkinter
+
+from src.PatronSingleton.Singleton import Singleton
+from gramatica import gramatica
 
 ventana=Tk()
 textE=Text()
@@ -74,7 +76,29 @@ def cargarArchivo():
         contenido.close()
 
 def Ejecutar():
-    pass
+    global texto,analizado,textE, textS
+    s=Singleton.getInstance()
+    s.reset()
+    texto=textE.get("1.0", "end-1c")
+    if texto=="":
+        messagebox.showerror(message="No hay texto en consola por ejecutar",title="Error")
+    else:
+        textS.config(state=NORMAL)
+        textS.delete('1.0', END)
+        textS.config(state=DISABLED)
+        a=0
+        AST = gramatica.parse(texto)
+        print(AST)
+        for i in AST:
+            try:
+                i.Ejecutar(a)
+            except:
+                print("error.........................")
+        textS.config(state=NORMAL)
+        textS.delete('1.0', END)
+        textS.insert(END,s.getConsola())
+        textS.config(state=DISABLED)
+        
      
 if __name__=='__main__':
     generarVentana()
