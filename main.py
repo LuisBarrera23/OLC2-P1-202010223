@@ -3,6 +3,8 @@ from tkinter import filedialog, messagebox
 import tkinter
 
 from src.PatronSingleton.Singleton import Singleton
+from src.Symbol.Error import Error
+from src.Symbol.EntornoTabla import EntornoTabla
 from gramatica import gramatica
 
 ventana=Tk()
@@ -86,18 +88,22 @@ def Ejecutar():
         textS.config(state=NORMAL)
         textS.delete('1.0', END)
         textS.config(state=DISABLED)
-        a=0
+        EntornoPadre=EntornoTabla(None)
         AST = gramatica.parse(texto)
-        print(AST)
+        #print(AST)
         for i in AST:
             try:
-                i.Ejecutar(a)
+                i.Ejecutar(EntornoPadre)
             except:
                 print("error.........................")
         textS.config(state=NORMAL)
         textS.delete('1.0', END)
         textS.insert(END,s.getConsola())
         textS.config(state=DISABLED)
+
+        errores:Error=s.getErrores()
+        for e in errores:
+            print(e.descripcion,e.tiempo," linea: ",e.linea," columna: ",e.columna)
         
      
 if __name__=='__main__':

@@ -1,7 +1,8 @@
 from enum import Enum
-import string
 from src.Abstract.Expresion import Expresion
 from src.Abstract.RetornoType import RetornoType, TipoDato
+from src.PatronSingleton.Singleton import Singleton
+from src.Symbol.Error import Error
 
 class TIPO_OPERACION(Enum):
     SUMA = 1,
@@ -33,6 +34,7 @@ class Operacion(Expresion):
         
 
     def obtenerValor(self, entorno) -> RetornoType:
+        s=Singleton.getInstance()
         E1=RetornoType()
         E2=RetornoType()
         RetornoUnario=RetornoType()
@@ -59,18 +61,26 @@ class Operacion(Expresion):
                     return RetornoType(valor=str(E1.valor+E2.valor),tipo=TipoDato.STR)
                 elif E1.tipo==TipoDato.STR and E2.tipo==TipoDato.STRING:
                     return RetornoType(valor=str(E1.valor+E2.valor),tipo=TipoDato.STR)
+
+                else:
+                    raise Exception(s.addError(Error("Tipo de suma no valida",self.linea,self.columna)))
             
             elif self.tipo==TIPO_OPERACION.RESTA:
                 if E1.tipo==TipoDato.F64 and E2.tipo==TipoDato.F64:
                     return RetornoType(valor=float(E1.valor-E2.valor),tipo=TipoDato.F64)
                 elif E1.tipo==TipoDato.I64 and E2.tipo==TipoDato.I64:
                     return RetornoType(valor=int(E1.valor-E2.valor),tipo=TipoDato.I64)
+
+                else:
+                    raise Exception(s.addError(Error("Tipo de resta no valida",self.linea,self.columna)))
             
             elif self.tipo==TIPO_OPERACION.MULTIPLICACION:
                 if E1.tipo==TipoDato.F64 and E2.tipo==TipoDato.F64:
                     return RetornoType(valor=float(E1.valor*E2.valor),tipo=TipoDato.F64)
                 elif E1.tipo==TipoDato.I64 and E2.tipo==TipoDato.I64:
                     return RetornoType(valor=int(E1.valor*E2.valor),tipo=TipoDato.I64)
+                else:
+                    raise Exception(s.addError(Error("Tipo de multiplicacion no valida",self.linea,self.columna)))
 
             elif self.tipo==TIPO_OPERACION.DIVISION:
                 if E1.tipo==TipoDato.F64 and E2.tipo==TipoDato.F64:
@@ -78,17 +88,25 @@ class Operacion(Expresion):
                 elif E1.tipo==TipoDato.I64 and E2.tipo==TipoDato.I64:
                     return RetornoType(valor=float(E1.valor/E2.valor),tipo=TipoDato.F64)
 
+                else:
+                    raise Exception(s.addError(Error("Tipo de division no valida",self.linea,self.columna)))
+
             elif self.tipo==TIPO_OPERACION.POTENCIA:
                 if E1.tipo==TipoDato.F64 and E2.tipo==TipoDato.F64 and self.tipo2==TipoDato.F64:
                     return RetornoType(valor=float(E1.valor**E2.valor),tipo=TipoDato.F64)
                 elif E1.tipo==TipoDato.I64 and E2.tipo==TipoDato.I64 and self.tipo2==TipoDato.I64:
                     return RetornoType(valor=int(E1.valor**E2.valor),tipo=TipoDato.I64)
+
+                else:
+                    raise Exception(s.addError(Error("Tipo de potencia no valida",self.linea,self.columna)))
             
             elif self.tipo==TIPO_OPERACION.MODULO:
                 if E1.tipo==TipoDato.F64 and E2.tipo==TipoDato.F64:
                     return RetornoType(valor=float(E1.valor%E2.valor),tipo=TipoDato.F64)
                 elif E1.tipo==TipoDato.I64 and E2.tipo==TipoDato.I64:
                     return RetornoType(valor=int(E1.valor%E2.valor),tipo=TipoDato.I64)
+                else:
+                    raise Exception(s.addError(Error("Tipo de modulo no valida",self.linea,self.columna)))
 
 
 #--------------------------------------------------------------------------------
@@ -117,7 +135,11 @@ class Operacion(Expresion):
             elif self.tipo==TIPO_OPERACION.OR:
                 if E1.tipo==TipoDato.BOOL and E2.tipo==TipoDato.BOOL:
                     return RetornoType(valor=E1.valor or E2.valor,tipo=TipoDato.BOOL)
+                else:
+                    raise Exception(s.addError(Error("Tipo de OR no valido",self.linea,self.columna)))
 
             elif self.tipo==TIPO_OPERACION.AND:
                 if E1.tipo==TipoDato.BOOL and E2.tipo==TipoDato.BOOL:
                     return RetornoType(valor=E1.valor and E2.valor,tipo=TipoDato.BOOL)
+                else:
+                    raise Exception(s.addError(Error("Tipo de AND no valido",self.linea,self.columna)))

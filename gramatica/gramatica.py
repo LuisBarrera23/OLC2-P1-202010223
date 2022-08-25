@@ -7,6 +7,8 @@ from src.Abstract.RetornoType import TipoDato
 from src.Expresion.Primitivo import Primitivo
 
 from src.Instruccion.Print import Print
+from src.Instruccion.Declaracion import Declaracion
+from src.Instruccion.Asignacion import Asignacion
 
 
 from src.Expresion.casteo import Casteo
@@ -27,7 +29,9 @@ reservadas = {
     'println' : 'PRINTLN',
     'as' : 'AS',
     'to_string' : 'TOSTRING',
-    'to_owned' : 'TOOWNED'
+    'to_owned' : 'TOOWNED',
+    'let' : 'LET',
+    'mut' : 'MUT'
 }
 
 tokens = [
@@ -172,12 +176,36 @@ def p_instrucciones_instruccion(t):
     t[0]=[t[1]]
 
 def p_instruccion(t):
-    """instruccion : print"""
+    """instruccion : print PTCOMA
+                | declaracion PTCOMA
+                | asignacion PTCOMA"""
     t[0]=t[1]
 
 def p_print(t):
-    """print : PRINTLN NOT PIZQ expresion PDER PTCOMA"""
+    """print : PRINTLN NOT PIZQ expresion PDER """
     t[0]=Print(t[4],t.lexer.lineno,find_column(entrada,t.slice[1]))
+
+def p_declaracion1(t):
+    """declaracion : LET MUT ID DOBLEPT tipo_dato IGUAL expresion
+                | LET ID DOBLEPT tipo_dato IGUAL expresion """
+
+    if len(t)==8:
+        t[0]=Declaracion(t[3],t[7],True,t.lexer.lineno,find_column(entrada,t.slice[1]),t[5])
+    if len(t)==7:
+        t[0]=Declaracion(t[2],t[6],False,t.lexer.lineno,find_column(entrada,t.slice[1]),t[4])
+
+def p_declaracion2(t):
+    """declaracion : LET MUT ID IGUAL expresion
+                | LET ID IGUAL expresion """
+
+    if len(t)==6:
+        t[0]=Declaracion(t[3],t[5],True,t.lexer.lineno,find_column(entrada,t.slice[1]))
+    if len(t)==5:
+        t[0]=Declaracion(t[2],t[4],False,t.lexer.lineno,find_column(entrada,t.slice[1]))
+
+def p_asignacion(t):
+    """asignacion : ID IGUAL expresion"""
+    t[0]= Asignacion(t[1],t[3],t.lexer.lineno,find_column(entrada,t.slice[2]))
 
 
 def p_expresion_aritmetica(t):
@@ -277,15 +305,36 @@ def p_expresion_primitiva(t):
         t[0] = Primitivo(t[1],TipoDato.I64)
     elif t.slice[1].type == 'DECIMAL':
         t[0] = Primitivo(t[1], TipoDato.F64)
-    elif t.slice[1].type == 'ID':
-        print(t[1])
-        #t[0] = Identificador(t[1])
     elif t.slice[1].type == 'CADENA':
+        t[0] = Primitivo(t[1], TipoDato.STR)
+    elif t.slice[1].type == 'ID':
         t[0] = Primitivo(t[1], TipoDato.STR)
     elif t.slice[1].type == 'TRUE':
         t[0] = Primitivo(True, TipoDato.BOOL)
     elif t.slice[1].type == 'FALSE':
         t[0] = Primitivo(False, TipoDato.BOOL)
+
+def p_tipo_dato(t):
+    """ tipo_dato : I64
+                     | F64
+                     | BOOL
+                     | CHAR
+                     | STR
+                     | STRING
+                     """
+
+    if t[1] == 'i64':
+        t[0] = TipoDato.I64
+    if t[1] == 'f64':
+        t[0] = TipoDato.F64
+    if t[1] == 'bool':
+        t[0] = TipoDato.BOOL
+    if t[1] == 'char':
+        t[0] = TipoDato.CHAR
+    if t[1] == '&str':
+        t[0] = TipoDato.STR
+    if t[1] == 'string':
+        t[0] = TipoDato.STRING
 
 
 def p_error(t):
