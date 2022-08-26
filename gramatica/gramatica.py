@@ -9,9 +9,11 @@ from src.Expresion.Primitivo import Primitivo
 from src.Instruccion.Print import Print
 from src.Instruccion.Declaracion import Declaracion
 from src.Instruccion.Asignacion import Asignacion
+from src.Instruccion.If_i import If_i
 
 
 from src.Expresion.casteo import Casteo
+from src.Expresion.AccesoSimbolo import AccesoSimbolo
 
 
 
@@ -31,7 +33,9 @@ reservadas = {
     'to_string' : 'TOSTRING',
     'to_owned' : 'TOOWNED',
     'let' : 'LET',
-    'mut' : 'MUT'
+    'mut' : 'MUT',
+    'if' : 'IF',
+    'else' : 'ELSE'
 }
 
 tokens = [
@@ -43,6 +47,8 @@ tokens = [
              'PDER',
              'CORIZQ',
              'CORDER',
+             'LLAVEIZQ',
+             'LLAVEDER',
 
              'AND',
              'OR',
@@ -76,6 +82,8 @@ t_PIZQ = r'\('
 t_PDER = r'\)'
 t_CORIZQ = r'\['
 t_CORDER = r'\]'
+t_LLAVEIZQ = r'\{'
+t_LLAVEDER = r'\}'
 
 t_AND = r'\&\&'
 t_OR = r'\|\|'
@@ -166,6 +174,15 @@ def p_init(t):
     """init : instrucciones"""
     t[0]=t[1]
 
+def p_bloque(t):
+    """bloque  : LLAVEIZQ  LLAVEDER
+            | LLAVEIZQ  instrucciones LLAVEDER """
+
+    if len(t) == 3:
+        t[0] = []
+    else:
+        t[0] = t[2]
+
 def p_instrucciones(t):
     """instrucciones : instrucciones instruccion"""
     t[1].append(t[2])
@@ -178,7 +195,8 @@ def p_instrucciones_instruccion(t):
 def p_instruccion(t):
     """instruccion : print PTCOMA
                 | declaracion PTCOMA
-                | asignacion PTCOMA"""
+                | asignacion PTCOMA
+                | if_i"""
     t[0]=t[1]
 
 def p_print(t):
@@ -207,6 +225,22 @@ def p_asignacion(t):
     """asignacion : ID IGUAL expresion"""
     t[0]= Asignacion(t[1],t[3],t.lexer.lineno,find_column(entrada,t.slice[2]))
 
+def p_if_instruccion(t):
+    """if_i : IF expresion bloque else"""
+    t[0] = If_i(t[2],t[3],t[4],t.lexer.lineno,find_column(entrada,t.slice[1]))
+
+def p_else_instruccion(t):
+    """else : ELSE if_i
+            | ELSE  bloque
+            | empty"""
+    
+    if len(t)==3:
+        t[0] = t[2]
+
+def p_vacio(t):
+    """empty : """
+    pass
+    # para romper la recursividad 
 
 def p_expresion_aritmetica(t):
     """expresion : MENOS expresion %prec UMENOS
@@ -308,7 +342,7 @@ def p_expresion_primitiva(t):
     elif t.slice[1].type == 'CADENA':
         t[0] = Primitivo(t[1], TipoDato.STR)
     elif t.slice[1].type == 'ID':
-        t[0] = Primitivo(t[1], TipoDato.STR)
+        t[0] = AccesoSimbolo(t[1],t.lexer.lineno,find_column(entrada,t.slice[1]))
     elif t.slice[1].type == 'TRUE':
         t[0] = Primitivo(True, TipoDato.BOOL)
     elif t.slice[1].type == 'FALSE':
