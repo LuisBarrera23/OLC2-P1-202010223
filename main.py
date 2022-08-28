@@ -90,7 +90,7 @@ def Ejecutar():
         textS.config(state=DISABLED)
         EntornoPadre=EntornoTabla(None)
         AST = gramatica.parse(texto)
-        #print(AST)
+        print(AST)
         for i in AST:
             try:
                 i.Ejecutar(EntornoPadre)

@@ -10,10 +10,12 @@ from src.Instruccion.Print import Print
 from src.Instruccion.Declaracion import Declaracion
 from src.Instruccion.Asignacion import Asignacion
 from src.Instruccion.If_i import If_i
+from src.Instruccion.Funcion import Funcion
 
 
 from src.Expresion.casteo import Casteo
 from src.Expresion.AccesoSimbolo import AccesoSimbolo
+from src.Expresion.If_e import If_e
 
 
 
@@ -35,7 +37,8 @@ reservadas = {
     'let' : 'LET',
     'mut' : 'MUT',
     'if' : 'IF',
-    'else' : 'ELSE'
+    'else' : 'ELSE',
+    'fn' : 'FN'
 }
 
 tokens = [
@@ -171,8 +174,26 @@ precedence = (
 )
 
 def p_init(t):
-    """init : instrucciones"""
+    """init : funciones_structs"""
     t[0]=t[1]
+
+def p_funciones_structs(t):
+    """funciones_structs : funciones_structs funcion_struct"""
+    t[1].append(t[2])
+    t[0]=t[1]
+
+def p_funciones_structs_corte(t):
+    """funciones_structs : funcion_struct """
+    t[0] = [t[1]]
+
+def p_funcion_struct(t):
+    """funcion_struct : funcion"""
+    t[0]=t[1]
+
+def p_funcion(t):
+    """funcion : FN ID PIZQ PDER bloque"""
+    t[0]= Funcion(t[2],t[5],[],t.lexer.lineno,find_column(entrada,t.slice[1]))
+
 
 def p_bloque(t):
     """bloque  : LLAVEIZQ  LLAVEDER
@@ -308,7 +329,8 @@ def p_expresion_relacionalesLogicas(t):
 
 def p_expresiones_variadas(t):
     """expresion : tostring
-                | as"""
+                | as
+                | if_e"""
     t[0]=t[1]
 
 def p_tostring(t):
@@ -326,7 +348,34 @@ def p_as(t):
     elif(t[3]=="f64"):
         t[0]=Casteo(t[1],t.lexer.lineno,find_column(entrada,t.slice[2]),TipoDato.F64)
 
+def p_if_Expresion(t):
+    """ if_e : IF expresion LLAVEIZQ expresion LLAVEDER
+            |  IF expresion LLAVEIZQ expresion LLAVEDER ELSE LLAVEIZQ expresion LLAVEDER
+            |  IF expresion LLAVEIZQ expresion LLAVEDER listaelse
+            |  IF expresion LLAVEIZQ expresion LLAVEDER listaelse ELSE LLAVEIZQ expresion LLAVEDER"""
+
+    if len(t)==6:
+        t[0]=If_e(t[2],t[4],[],None,t.lexer.lineno,find_column(entrada,t.slice[1]))
+    elif len(t)==7:
+        t[0]=If_e(t[2],t[4],t[6],None,t.lexer.lineno,find_column(entrada,t.slice[1]))
+    elif len(t)==10:
+        t[0]=If_e(t[2],t[4],[],t[8],t.lexer.lineno,find_column(entrada,t.slice[1]))
+    elif len(t)==11:
+        t[0]=If_e(t[2],t[4],t[6],t[9],t.lexer.lineno,find_column(entrada,t.slice[1]))
+
+def p_elseif_lista(t):
+    """ listaelse : listaelse elseif """
+    t[1].append(t[2])
+    t[0]=t[1]
     
+def p_elseif_otra(t):
+    """listaelse : elseif """
+    t[0]=[t[1]]
+
+def p_elseif_def(t):
+    """elseif : ELSE IF expresion LLAVEIZQ expresion LLAVEDER"""
+    t[0]=If_e(t[3],t[5],[],None,t.lexer.lineno,find_column(entrada,t.slice[1]))
+
 def p_expresion_primitiva(t):
     """expresion : ENTERO
                     | DECIMAL

@@ -86,7 +86,7 @@ class Operacion(Expresion):
                 if E1.tipo==TipoDato.F64 and E2.tipo==TipoDato.F64:
                     return RetornoType(valor=float(E1.valor/E2.valor),tipo=TipoDato.F64)
                 elif E1.tipo==TipoDato.I64 and E2.tipo==TipoDato.I64:
-                    return RetornoType(valor=float(E1.valor/E2.valor),tipo=TipoDato.F64)
+                    return RetornoType(valor=int(E1.valor/E2.valor),tipo=TipoDato.I64)
 
                 else:
                     raise Exception(s.addError(Error("Tipo de division no valida",self.linea,self.columna)))
