@@ -1,6 +1,7 @@
 from tkinter import *
 from tkinter import filedialog, messagebox
 import tkinter
+from src.Instruccion.Funcion import Funcion
 
 from src.PatronSingleton.Singleton import Singleton
 from src.Symbol.Error import Error
@@ -88,14 +89,23 @@ def Ejecutar():
         textS.config(state=NORMAL)
         textS.delete('1.0', END)
         textS.config(state=DISABLED)
+
+
         EntornoPadre=EntornoTabla(None)
         AST = gramatica.parse(texto)
-        print(AST)
+        #print(AST)
         for i in AST:
             try:
                 i.Ejecutar(EntornoPadre)
             except:
                 print("error.........................")
+
+        if EntornoPadre.existeFuncion("main"):
+            funcion:Funcion=EntornoPadre.obtenerFuncion("main")
+            funcion.Ejecutar_main(EntornoPadre)
+
+        else:
+            s.addError(Error("Debe existir la funcion main",0,0))
         textS.config(state=NORMAL)
         textS.delete('1.0', END)
         textS.insert(END,s.getConsola())

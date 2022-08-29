@@ -11,11 +11,14 @@ from src.Instruccion.Declaracion import Declaracion
 from src.Instruccion.Asignacion import Asignacion
 from src.Instruccion.If_i import If_i
 from src.Instruccion.Funcion import Funcion
+from src.Instruccion.Llamada import Llamada
 
 
 from src.Expresion.casteo import Casteo
 from src.Expresion.AccesoSimbolo import AccesoSimbolo
 from src.Expresion.If_e import If_e
+
+from src.Symbol.Parametro import Parametro
 
 
 
@@ -73,7 +76,8 @@ tokens = [
              'DECIMAL',
              'ENTERO',
              'ID',
-             'CADENA'
+             'CADENA',
+             'FLECHA'
          ] + list(reservadas.values())
 
 # definir tokens
@@ -105,6 +109,7 @@ t_MENOS = r'-'
 t_DIVISION = r'/'
 t_MULTIPLICACION = r'\*'
 t_MODULO = r'\%'
+t_FLECHA = r'->'
 
 def t_DECIMAL(t):
     r"""\d+\.\d+"""
@@ -191,8 +196,52 @@ def p_funcion_struct(t):
     t[0]=t[1]
 
 def p_funcion(t):
-    """funcion : FN ID PIZQ PDER bloque"""
-    t[0]= Funcion(t[2],t[5],[],t.lexer.lineno,find_column(entrada,t.slice[1]))
+    """funcion : FN ID PIZQ PDER bloque
+                | FN ID PIZQ PDER FLECHA tipo_dato bloque
+                | FN ID PIZQ parametros PDER bloque
+                | FN ID PIZQ parametros PDER FLECHA tipo_dato bloque """
+    if len(t)==6:
+        t[0] = Funcion(t[2],TipoDato.ERROR,t[5],[],t.lexer.lineno,find_column(entrada,t.slice[1]))
+    elif len(t)==8:
+        t[0] = Funcion(t[2],t[6],t[7],[],t.lexer.lineno,find_column(entrada,t.slice[1]))
+    elif len(t)==7:
+        t[0] = Funcion(t[2],TipoDato.ERROR,t[6],t[4],t.lexer.lineno,find_column(entrada,t.slice[1]))
+    elif len(t)==9:
+        t[0] = Funcion(t[2],t[7],t[8],t[4],t.lexer.lineno,find_column(entrada,t.slice[1]))
+
+def p_lista_parametros(t):
+    """ parametros : parametros COMA parametro"""
+    t[1].append(t[3])
+    t[0] = t[1]
+
+
+def p_lista_parametros_corte(t):
+    """ parametros : parametro"""
+    t[0] = [t[1]]
+
+
+def p_parametro(t):
+    """ parametro : ID DOBLEPT tipo_dato """
+    t[0] = Parametro(t[1],t[3],t.lexer.lineno,find_column(entrada,t.slice[2]))
+
+def p_llamada(t):
+    """llamadaF : ID PIZQ PDER
+                | ID PIZQ lista_expresiones PDER """
+    if len(t)==4:
+        t[0]=Llamada(t[1],[],t.lexer.lineno,find_column(entrada,t.slice[1]))
+    if len(t)==5:
+        t[0]=Llamada(t[1],t[3],t.lexer.lineno,find_column(entrada,t.slice[1]))
+
+def p_lista_expresiones(t):
+    """ lista_expresiones : lista_expresiones COMA  expresion"""
+    t[1].append(t[3])
+    t[0] = t[1]
+
+
+def p_lista_expresiones_corte(t):
+    """ lista_expresiones : expresion"""
+    t[0] = [t[1]]
+
 
 
 def p_bloque(t):
@@ -217,7 +266,8 @@ def p_instruccion(t):
     """instruccion : print PTCOMA
                 | declaracion PTCOMA
                 | asignacion PTCOMA
-                | if_i"""
+                | if_i
+                | llamadaF PTCOMA"""
     t[0]=t[1]
 
 def p_print(t):

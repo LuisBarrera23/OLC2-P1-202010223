@@ -1,3 +1,4 @@
+from src.Abstract.Expresion import Expresion
 class Parametro:
     def __init__(self, id, tipo, linea, columna, ref=False):
         self.id=id

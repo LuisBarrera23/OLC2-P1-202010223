@@ -78,4 +78,4 @@ class EntornoTabla:
 
     def agregarFuncion(self,funcionAdd:Funcion):
         self.tablaFunciones[funcionAdd.identificador] = funcionAdd
-        print(f"funcion {funcionAdd.identificador} agregada con exito")
+        #print(f"funcion {funcionAdd.identificador} agregada con exito")
