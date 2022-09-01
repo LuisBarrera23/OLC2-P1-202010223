@@ -9,6 +9,8 @@ from src.Instruccion.Funcion import Funcion
 from src.Symbol.EntornoTabla import EntornoTabla
 from src.Symbol.Symbol import Simbolo
 
+from src.Instruccion.Return import Return
+
 class Llamada(Instruccion,Expresion):
     def __init__(self,id, expresiones,linea, columna):
         self.id=id
@@ -17,10 +19,13 @@ class Llamada(Instruccion,Expresion):
         self.columna=columna
 
     def Ejecutar(self, entorno):
+        return self.obtenerValor(entorno)
+
+    def obtenerValor(self, entorno) -> RetornoType:
         s=Singleton.getInstance()
         existe=entorno.existeFuncion(self.id)
         if existe==False:
-            raise Exception(s.addError(Error(f"La funcion {self.identificador} no existe",self.linea,self.columna)))
+            raise Exception(s.addError(Error(f"La funcion {self.id} no existe",self.linea,self.columna)))
 
         funcion:Funcion=entorno.obtenerFuncion(self.id)
         # if funcion.tipo!=TipoDato.ERROR:
@@ -29,15 +34,40 @@ class Llamada(Instruccion,Expresion):
 
         if funcion.parametros==[] and self.expresiones==[]:
             for i in funcion.bloque:
-                i.Ejecutar(nuevoEntorno)
+                retorno=i.Ejecutar(nuevoEntorno)
+                if isinstance(retorno,Return):
+                    if retorno.expresion==None:
+                        if funcion.tipo!=TipoDato.ERROR:
+                            raise Exception(s.addError(Error(f"El Return no esta retornando un tipo de dato {self.strTipo(funcion.tipo)}",retorno.linea,retorno.columna)))
+                        return
+                    else:
+                        if funcion.tipo==TipoDato.ERROR:
+                            raise Exception(s.addError(Error(f"La funcion {funcion.identificador} no debe de retornar ninguna expresion",retorno.linea,retorno.columna)))
+                        if funcion.tipo==retorno.Retorno.tipo:
+                            return retorno.Retorno
+                        else:
+                            raise Exception(s.addError(Error(f"El return necesita una expresion de tipo {self.strTipo(funcion.tipo)}",retorno.linea,retorno.columna)))
+            if funcion.tipo!=TipoDato.ERROR:
+                raise Exception(s.addError(Error(f"Falto implementar un return de tipo : {self.strTipo(funcion.tipo)}",funcion.linea,funcion.columna)))
             return
 
         self.compararParametros(nuevoEntorno,funcion.parametros,self.expresiones)
         for i in funcion.bloque:
-            i.Ejecutar(nuevoEntorno)
-
-    def obtenerValor(self, entorno) -> RetornoType:
-        return super().obtenerValor(entorno)
+            retorno=i.Ejecutar(nuevoEntorno)
+            if isinstance(retorno,Return):
+                if retorno.expresion==None:
+                    if funcion.tipo!=TipoDato.ERROR:
+                        raise Exception(s.addError(Error(f"El Return no esta retornando un tipo de dato {self.strTipo(funcion.tipo)}",retorno.linea,retorno.columna)))
+                    return
+                else:
+                    if funcion.tipo==TipoDato.ERROR:
+                        raise Exception(s.addError(Error(f"La funcion {funcion.identificador} no debe de retornar ninguna expresion",retorno.linea,retorno.columna)))
+                    if funcion.tipo==retorno.Retorno.tipo:
+                        return retorno.Retorno
+                    else:
+                        raise Exception(s.addError(Error(f"El return necesita una expresion de tipo {self.strTipo(funcion.tipo)}",retorno.linea,retorno.columna)))
+        if funcion.tipo!=TipoDato.ERROR:
+            raise Exception(s.addError(Error(f"Falto implementar un return de tipo : {self.strTipo(funcion.tipo)}",funcion.linea,funcion.columna)))
         
     def compararParametros(self, entornoN, parametros, expresiones):
         s=Singleton.getInstance()
@@ -45,7 +75,7 @@ class Llamada(Instruccion,Expresion):
             raise Exception(s.addError(Error(f"No coincide la cantidad de parametros",self.linea,self.columna)))
         i=0
         for p in parametros:
-            E:RetornoType=expresiones[i].obtenerValor(entornoN)
+            E:RetornoType=expresiones[i].obtenerValor(entornoN.padre)
             if E.tipo==p.tipo:
                 nueva=Simbolo()
                 nueva.Simbolo_primitivo(p.id,E.valor,E.tipo,self.linea,self.columna,True)

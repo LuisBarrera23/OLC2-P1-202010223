@@ -2,6 +2,9 @@ from src.Abstract.RetornoType import TipoDato
 from src.Abstract.Instruccion import Instruccion
 from src.Symbol.Symbol import Simbolo
 from src.Symbol.EntornoTabla import EntornoTabla
+from src.Instruccion.Return import Return
+from src.Instruccion.Break import Break
+from src.Instruccion.Continue import Continue
 
 from src.PatronSingleton.Singleton import Singleton
 from src.Symbol.Error import Error
@@ -15,20 +18,30 @@ class If_i(Instruccion):
         self.columna=columna
         
     def Ejecutar(self, entorno):
+        nuevo_entorno=EntornoTabla(entorno)
         E=self.condicion.obtenerValor(entorno)
         s=Singleton.getInstance()
         if E.tipo != TipoDato.BOOL:
             raise Exception(s.addError(Error(f"Instruccion if necesita una expresion booleana",self.linea,self.columna)))
-
-        if E.valor:
-            nuevo_entorno=EntornoTabla(entorno)
+        if E.valor==True:
             for instruccion in self.verdadero:
-                instruccion.Ejecutar(nuevo_entorno)
+                retorno=instruccion.Ejecutar(nuevo_entorno)
+                if isinstance(retorno,Return):
+                    return retorno
+                elif isinstance(retorno,Break):
+                    return retorno
+                elif isinstance(retorno,Continue):
+                        return retorno
 
         else:
             if isinstance(self.falso, If_i):
-                self.falso.Ejecutar(entorno)
+                return self.falso.Ejecutar(nuevo_entorno)
             else:
-                nuevo_entorno=EntornoTabla(entorno)
                 for instruccion in self.falso:
-                    instruccion.Ejecutar(nuevo_entorno)
+                    retorno=instruccion.Ejecutar(nuevo_entorno)
+                    if isinstance(retorno,Return):
+                        return retorno
+                    elif isinstance(retorno,Break):
+                        return retorno
+                    elif isinstance(retorno,Continue):
+                        return retorno

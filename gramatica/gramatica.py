@@ -12,6 +12,11 @@ from src.Instruccion.Asignacion import Asignacion
 from src.Instruccion.If_i import If_i
 from src.Instruccion.Funcion import Funcion
 from src.Instruccion.Llamada import Llamada
+from src.Instruccion.Return import Return
+from src.Instruccion.Break import Break
+from src.Instruccion.Loop import Loop
+from src.Instruccion.While import While
+from src.Instruccion.Continue import Continue
 
 
 from src.Expresion.casteo import Casteo
@@ -27,7 +32,7 @@ reservadas = {
     'i64' : 'I64',
     'bool' : 'BOOL',
     'char' : 'CHAR',
-    '&str' : 'STR',
+    'str' : 'STR',
     'string' : 'STRING',
     'true' : 'TRUE',
     'false' : 'FALSE',
@@ -41,7 +46,12 @@ reservadas = {
     'mut' : 'MUT',
     'if' : 'IF',
     'else' : 'ELSE',
-    'fn' : 'FN'
+    'fn' : 'FN',
+    'return' : 'RETURN',
+    'break' : 'BREAK',
+    'loop' : 'LOOP',
+    'while' : 'WHILE',
+    'continue' : 'CONTINUE'
 }
 
 tokens = [
@@ -77,7 +87,9 @@ tokens = [
              'ENTERO',
              'ID',
              'CADENA',
-             'FLECHA'
+             'CARACTER',
+             'FLECHA',
+             'Y'
          ] + list(reservadas.values())
 
 # definir tokens
@@ -95,6 +107,8 @@ t_LLAVEDER = r'\}'
 t_AND = r'\&\&'
 t_OR = r'\|\|'
 t_NOT = r'\!'
+
+t_Y = r'\&'
 
 t_MENOR = r'\<'
 t_MAYOR = r'\>'
@@ -117,6 +131,12 @@ def t_DECIMAL(t):
         t.value = float(t.value)
     except ValueError:
         t.value = 0.0
+    return t
+
+def t_CARACTER(t):
+    r'(\'([a-zA-Z]|\\\'|\\"|\\t|\\n|\\\\|.)\')' # expresion regualar
+
+    t.value = t.value[1:-1]
     return t
 
 
@@ -267,12 +287,25 @@ def p_instruccion(t):
                 | declaracion PTCOMA
                 | asignacion PTCOMA
                 | if_i
-                | llamadaF PTCOMA"""
+                | llamadaF PTCOMA
+                | return PTCOMA
+                | loop 
+                | break PTCOMA
+                | while
+                | continue PTCOMA"""
     t[0]=t[1]
 
 def p_print(t):
     """print : PRINTLN NOT PIZQ expresion PDER """
     t[0]=Print(t[4],t.lexer.lineno,find_column(entrada,t.slice[1]))
+
+def p_return(t):
+    """return : RETURN 
+                | RETURN expresion"""
+    if len(t)==2:
+        t[0]=Return(None,t.lexer.lineno,find_column(entrada,t.slice[1]))
+    elif len(t)==3:
+        t[0]=Return(t[2],t.lexer.lineno,find_column(entrada,t.slice[1]))
 
 def p_declaracion1(t):
     """declaracion : LET MUT ID DOBLEPT tipo_dato IGUAL expresion
@@ -307,11 +340,36 @@ def p_else_instruccion(t):
     
     if len(t)==3:
         t[0] = t[2]
+    if len(t)==2:
+        t[0]=[]
 
 def p_vacio(t):
     """empty : """
     pass
     # para romper la recursividad 
+
+
+def p_loop(t):
+    """loop : LOOP bloque"""
+    t[0]= Loop(t[2],t.lexer.lineno,find_column(entrada,t.slice[1]))
+
+def p_break(t):
+    """break : BREAK 
+                | BREAK expresion"""
+    if len(t)==2:
+        t[0]=Break(None,t.lexer.lineno,find_column(entrada,t.slice[1]))
+    elif len(t)==3:
+        t[0]=Break(t[2],t.lexer.lineno,find_column(entrada,t.slice[1]))
+
+
+def p_while(t):
+    """while : WHILE expresion bloque"""
+    t[0]= While(t[2],t[3],t.lexer.lineno,find_column(entrada,t.slice[1]))
+
+def p_continue(t):
+    """ continue : CONTINUE"""
+    t[0]=Continue(t.lexer.lineno,find_column(entrada,t.slice[1]))
+
 
 def p_expresion_aritmetica(t):
     """expresion : MENOS expresion %prec UMENOS
@@ -380,7 +438,9 @@ def p_expresion_relacionalesLogicas(t):
 def p_expresiones_variadas(t):
     """expresion : tostring
                 | as
-                | if_e"""
+                | if_e
+                | llamadaF
+                | loop"""
     t[0]=t[1]
 
 def p_tostring(t):
@@ -430,6 +490,7 @@ def p_expresion_primitiva(t):
     """expresion : ENTERO
                     | DECIMAL
                     | ID
+                    | CARACTER
                     | CADENA
                     | TRUE
                     | FALSE"""
@@ -438,6 +499,8 @@ def p_expresion_primitiva(t):
         t[0] = Primitivo(t[1],TipoDato.I64)
     elif t.slice[1].type == 'DECIMAL':
         t[0] = Primitivo(t[1], TipoDato.F64)
+    elif t.slice[1].type == 'CARACTER':
+        t[0] = Primitivo(t[1], TipoDato.CHAR)
     elif t.slice[1].type == 'CADENA':
         t[0] = Primitivo(t[1], TipoDato.STR)
     elif t.slice[1].type == 'ID':
@@ -452,7 +515,7 @@ def p_tipo_dato(t):
                      | F64
                      | BOOL
                      | CHAR
-                     | STR
+                     | str
                      | STRING
                      """
 
@@ -469,7 +532,9 @@ def p_tipo_dato(t):
     if t[1] == 'string':
         t[0] = TipoDato.STRING
 
-
+def p_str(t):
+    """str : Y STR"""
+    t[0]="&str"
 def p_error(t):
     print(f"SE ENCONTRO UN ERROR {t} En linea {t.lexer.lineno} columna {find_column(entrada,t)}")
 
