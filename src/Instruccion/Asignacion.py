@@ -19,6 +19,7 @@ class Asignacion(Instruccion):
             raise Exception(s.addError(Error(f"Variable {self.id} no existe",self.linea,self.columna)))
         else:
             exp=entorno.obtenerSimbolo(self.id)
+            #print(E.tipo,exp.tipo)
             if exp.editable is False:
                 raise Exception(s.addError(Error(f"Variable {self.id} no es mutable",self.linea,self.columna)))
             if E.tipo==exp.tipo:

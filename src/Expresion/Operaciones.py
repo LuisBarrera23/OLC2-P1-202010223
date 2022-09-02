@@ -58,9 +58,9 @@ class Operacion(Expresion):
                 elif E1.tipo==TipoDato.I64 and E2.tipo==TipoDato.I64:
                     return RetornoType(valor=int(E1.valor+E2.valor),tipo=TipoDato.I64)
                 elif E1.tipo==TipoDato.STRING and E2.tipo==TipoDato.STR:
-                    return RetornoType(valor=str(E1.valor+E2.valor),tipo=TipoDato.STR)
+                    return RetornoType(valor=str(E1.valor+E2.valor),tipo=TipoDato.STRING)
                 elif E1.tipo==TipoDato.STR and E2.tipo==TipoDato.STRING:
-                    return RetornoType(valor=str(E1.valor+E2.valor),tipo=TipoDato.STR)
+                    return RetornoType(valor=str(E1.valor+E2.valor),tipo=TipoDato.STRING)
 
                 else:
                     raise Exception(s.addError(Error("Tipo de suma no valida",self.linea,self.columna)))

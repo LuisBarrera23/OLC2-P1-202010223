@@ -8,6 +8,8 @@ from src.Instruccion.Break import Break
 from src.Instruccion.Continue import Continue
 from src.Instruccion.Return import Return
 
+from src.Symbol.EntornoTabla import EntornoTabla
+
 class While(Instruccion):
     def __init__(self, condicion, bloque, linea, columna):
         self.condicion=condicion
@@ -21,11 +23,13 @@ class While(Instruccion):
         if E1.tipo!=TipoDato.BOOL:
             raise Exception(s.addError(Error(f"Instruccion while necesita una expresion booleana",self.linea,self.columna)))
         bandera=True
+        
         while bandera:
-            condicion:RetornoType=self.condicion.obtenerValor(entorno)
+            nuevoEntorno=EntornoTabla(entorno)
+            condicion:RetornoType=self.condicion.obtenerValor(nuevoEntorno)
             if condicion.valor:
                 for i in self.bloque:
-                    retorno=i.Ejecutar(entorno)
+                    retorno=i.Ejecutar(nuevoEntorno)
                     if isinstance(retorno,Continue):
                         break
                     elif isinstance(retorno,Return):

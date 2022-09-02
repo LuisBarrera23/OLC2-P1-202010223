@@ -17,6 +17,7 @@ from src.Instruccion.Break import Break
 from src.Instruccion.Loop import Loop
 from src.Instruccion.While import While
 from src.Instruccion.Continue import Continue
+from src.Instruccion.For import For
 
 
 from src.Expresion.casteo import Casteo
@@ -33,7 +34,7 @@ reservadas = {
     'bool' : 'BOOL',
     'char' : 'CHAR',
     'str' : 'STR',
-    'string' : 'STRING',
+    'String' : 'STRING',
     'true' : 'TRUE',
     'false' : 'FALSE',
     'pow' : 'POW',
@@ -51,7 +52,10 @@ reservadas = {
     'break' : 'BREAK',
     'loop' : 'LOOP',
     'while' : 'WHILE',
-    'continue' : 'CONTINUE'
+    'continue' : 'CONTINUE',
+    'for' : 'FOR',
+    'in' : 'IN',
+    'chars' : 'CHARS'
 }
 
 tokens = [
@@ -151,7 +155,7 @@ def t_ENTERO(t):
 
 def t_ID(t):
     r"""[a-zA-Z_][a-zA-Z0-9_]*"""
-    t.type = reservadas.get(t.value.lower(), 'ID')
+    t.type = reservadas.get(t.value, 'ID')
     return t
 
 
@@ -292,11 +296,12 @@ def p_instruccion(t):
                 | loop 
                 | break PTCOMA
                 | while
-                | continue PTCOMA"""
+                | continue PTCOMA
+                | for """
     t[0]=t[1]
 
 def p_print(t):
-    """print : PRINTLN NOT PIZQ expresion PDER """
+    """print : PRINTLN NOT PIZQ lista_expresiones PDER """
     t[0]=Print(t[4],t.lexer.lineno,find_column(entrada,t.slice[1]))
 
 def p_return(t):
@@ -370,6 +375,13 @@ def p_continue(t):
     """ continue : CONTINUE"""
     t[0]=Continue(t.lexer.lineno,find_column(entrada,t.slice[1]))
 
+def p_for1(t):
+    """ for : FOR ID IN expresion PUNTO PUNTO expresion bloque """
+    t[0]=For(t[2],t[4],t[7],1,t[8],t.lexer.lineno,find_column(entrada,t.slice[1]))
+
+def p_for2(t):
+    """ for : FOR ID IN expresion PUNTO CHARS PIZQ PDER bloque"""
+    t[0]=For(t[2],t[4],None,2,t[9],t.lexer.lineno,find_column(entrada,t.slice[1]))
 
 def p_expresion_aritmetica(t):
     """expresion : MENOS expresion %prec UMENOS
@@ -530,6 +542,7 @@ def p_tipo_dato(t):
     if t[1] == '&str':
         t[0] = TipoDato.STR
     if t[1] == 'string':
+        print("holaaaaaaaaaaaaaaaaaa")
         t[0] = TipoDato.STRING
 
 def p_str(t):
