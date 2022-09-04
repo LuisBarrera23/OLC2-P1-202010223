@@ -1,3 +1,4 @@
+from src.Abstract.RetornoType import TipoDato
 from src.Abstract.Instruccion import Instruccion
 from src.Symbol.Symbol import Simbolo
 
@@ -24,9 +25,15 @@ class Declaracion(Instruccion):
             nueva.Simbolo_primitivo(self.id,E.valor,E.tipo,self.linea,self.columna,self.mutable)
             entorno.agregarSimbolo(nueva)
         else:
-            if E.tipo==self.tipo:
+            if E.tipo==TipoDato.I64 and self.tipo==TipoDato.USIZE:
+                nueva=Simbolo()
+                nueva.Simbolo_primitivo(self.id,E.valor,self.tipo,self.linea,self.columna,self.mutable)
+                #print(nueva.tipo)
+                entorno.agregarSimbolo(nueva)
+            elif E.tipo==self.tipo:
                 nueva=Simbolo()
                 nueva.Simbolo_primitivo(self.id,E.valor,E.tipo,self.linea,self.columna,self.mutable)
+                #print(nueva.tipo)
                 entorno.agregarSimbolo(nueva)
             else:
                 raise Exception(s.addError(Error("Tipo de expresion no coincide con el tipo de dato especificado",self.linea,self.columna)))

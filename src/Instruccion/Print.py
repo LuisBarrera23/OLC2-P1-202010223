@@ -6,6 +6,7 @@ from src.Abstract.Instruccion import Instruccion
 from src.PatronSingleton.Singleton import Singleton
 from src.Symbol.Error import Error
 
+from src.Symbol.ArrayInstancia import ArrayInstancia
 
 class Print(Instruccion):
     pass
@@ -41,9 +42,35 @@ class Print(Instruccion):
                         pass
                     elif i =="}":
                         if len(lista)>0:
-                            salida+=str(lista[0].valor)
-                            lista.pop(0)
+                            if isinstance(lista[0].valor,ArrayInstancia):
+                                salida+=str(lista[0].valor.valores)
+                                lista.pop(0)
+                            else:
+                                salida+=str(lista[0].valor)
+                                lista.pop(0)
                             estado=0
+                    elif i ==":":
+                        estado=2
+                elif estado==2:
+                    if i =="?":
+                        estado=3
+                    elif self.isEspacio(i):
+                        pass
+                elif estado==3:
+                    if self.isEspacio(i):
+                        pass
+                    elif i=="}":
+                        if len(lista)>0:
+                            if isinstance(lista[0].valor,ArrayInstancia):
+                                salida+=str(lista[0].valor.valores)
+                                lista.pop(0)
+                            else:
+                                salida+=str(lista[0].valor)
+                                lista.pop(0)
+                            estado=0
+
+            if len(lista)!=0:
+                raise Exception(s.addError(Error("Print fallido, hicieron falta expresiones por imprimir",self.linea,self.columna)))
             s.addConsola(str(salida)+"\n")
 
     def isEspacio(self,c):

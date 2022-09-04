@@ -16,6 +16,10 @@ class Simbolo:
         self.parametros=[]
         self.instrucciones=[]
 
+        #EXTRA PARA ARREGLOS
+        self.valores=[]
+        self.dimensiones=[]
+
         
     def Simbolo_primitivo(self, id, valor,tipo,linea, columna, editable=False):
         self.identificador=id
@@ -30,3 +34,9 @@ class Simbolo:
         self.parametros=parametros
         self.instrucciones=instrucciones
         self.tipo=tipo
+
+    def Simbolo_arreglo(self,tipo, dimensiones, valores):
+        self.tipo=tipo
+        self.dimensiones=dimensiones
+        self.valores=valores
+        self.editable=False

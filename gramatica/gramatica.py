@@ -18,11 +18,17 @@ from src.Instruccion.Loop import Loop
 from src.Instruccion.While import While
 from src.Instruccion.Continue import Continue
 from src.Instruccion.For import For
+from src.Instruccion.DeclaracionArreglo import DeclaracionArreglo
+from src.Instruccion.AsignacionArreglo import AsignacionArreglo
 
 
 from src.Expresion.casteo import Casteo
 from src.Expresion.AccesoSimbolo import AccesoSimbolo
 from src.Expresion.If_e import If_e
+from src.Expresion.Nativas import Nativa
+from src.Expresion.ArrayContenido import ArrayContenido
+from src.Expresion.dimensionA import Dimension
+from src.Expresion.AccesoArreglo import AccesoArreglo
 
 from src.Symbol.Parametro import Parametro
 
@@ -34,6 +40,7 @@ reservadas = {
     'bool' : 'BOOL',
     'char' : 'CHAR',
     'str' : 'STR',
+    'usize' : 'USIZE',
     'String' : 'STRING',
     'true' : 'TRUE',
     'false' : 'FALSE',
@@ -55,7 +62,9 @@ reservadas = {
     'continue' : 'CONTINUE',
     'for' : 'FOR',
     'in' : 'IN',
-    'chars' : 'CHARS'
+    'chars' : 'CHARS',
+    'abs' : 'ABS',
+    'sqrt' : 'SQRT'
 }
 
 tokens = [
@@ -297,7 +306,8 @@ def p_instruccion(t):
                 | break PTCOMA
                 | while
                 | continue PTCOMA
-                | for """
+                | for 
+                | asignacionA PTCOMA"""
     t[0]=t[1]
 
 def p_print(t):
@@ -312,6 +322,11 @@ def p_return(t):
     elif len(t)==3:
         t[0]=Return(t[2],t.lexer.lineno,find_column(entrada,t.slice[1]))
 
+
+def p_asignacion_Arreglos(t):
+    """ asignacionA : ID ubicaciones IGUAL expresion"""
+    t[0] = AsignacionArreglo(t[1],t[2],t[4],t.lexer.lineno,find_column(entrada,t.slice[3]))
+# declaracion de simbolos primitivos---------------------------------------------------------------
 def p_declaracion1(t):
     """declaracion : LET MUT ID DOBLEPT tipo_dato IGUAL expresion
                 | LET ID DOBLEPT tipo_dato IGUAL expresion """
@@ -326,9 +341,45 @@ def p_declaracion2(t):
                 | LET ID IGUAL expresion """
 
     if len(t)==6:
-        t[0]=Declaracion(t[3],t[5],True,t.lexer.lineno,find_column(entrada,t.slice[1]))
+        if isinstance(t[5],ArrayContenido):
+            t[0]=DeclaracionArreglo(t[3],t[5],t.lexer.lineno,find_column(entrada,t.slice[1]),None,True)
+        else:
+            t[0]=Declaracion(t[3],t[5],True,t.lexer.lineno,find_column(entrada,t.slice[1]))
     if len(t)==5:
-        t[0]=Declaracion(t[2],t[4],False,t.lexer.lineno,find_column(entrada,t.slice[1]))
+        if isinstance(t[4],ArrayContenido):
+            t[0]=DeclaracionArreglo(t[2],t[4],t.lexer.lineno,find_column(entrada,t.slice[1]),None,False)
+        else:
+            t[0]=Declaracion(t[2],t[4],False,t.lexer.lineno,find_column(entrada,t.slice[1]))
+# Declaraciones de Arreglos
+
+def p_declaracion3(t):
+    """declaracion : LET MUT ID DOBLEPT dimensiones IGUAL expresion
+                | LET ID DOBLEPT dimensiones IGUAL expresion """
+
+    if len(t)==8:
+        t[0]=DeclaracionArreglo(t[3],t[7],t.lexer.lineno,find_column(entrada,t.slice[1]),t[5],True)
+    if len(t)==7:
+        t[0]=DeclaracionArreglo(t[2],t[6],t.lexer.lineno,find_column(entrada,t.slice[1]),t[4],False)
+
+def p_dimensiones(t):
+    """ dimensiones : CORIZQ tipo_dato PTCOMA expresion CORDER
+                    | CORIZQ CORIZQ tipo_dato PTCOMA expresion CORDER PTCOMA expresion CORDER
+                    | CORIZQ CORIZQ CORIZQ tipo_dato PTCOMA expresion CORDER PTCOMA expresion CORDER PTCOMA expresion CORDER"""
+    arreglo=[]
+    if len(t)==6:
+        arreglo.append(t[4])
+        t[0]=Dimension(arreglo,t[2],t.lexer.lineno,find_column(entrada,t.slice[1]))
+    if len(t)==10:
+        arreglo.append(t[8])
+        arreglo.append(t[5])
+        
+        t[0]=Dimension(arreglo,t[3],t.lexer.lineno,find_column(entrada,t.slice[1]))
+    if len(t)==14:
+        arreglo.append(t[12])
+        arreglo.append(t[9])
+        arreglo.append(t[6])
+        t[0]=Dimension(arreglo,t[4],t.lexer.lineno,find_column(entrada,t.slice[1]))
+
 
 def p_asignacion(t):
     """asignacion : ID IGUAL expresion"""
@@ -450,10 +501,37 @@ def p_expresion_relacionalesLogicas(t):
 def p_expresiones_variadas(t):
     """expresion : tostring
                 | as
+                | abs
+                | sqrt
                 | if_e
                 | llamadaF
-                | loop"""
+                | loop
+                | arraycontenido
+                | accesoarray """
     t[0]=t[1]
+
+
+def p_accesoarray(t):
+    """ accesoarray : ID ubicaciones """
+    t[0]=AccesoArreglo(t[1],t[2],t.lexer.lineno,find_column(entrada,t.slice[1]))
+
+def p_ubicaciones(t):
+    """ ubicaciones : ubicaciones ubicacion"""
+    t[1].append(t[2])
+    t[0] = t[1]
+
+def p_ubicaciones_corte(t):
+    """ ubicaciones : ubicacion"""
+    t[0] = [t[1]]
+
+def p_ubicacion(t):
+    """ ubicacion : CORIZQ expresion CORDER"""
+    t[0] = t[2]
+
+
+def p_arraycontenido(t):
+    """ arraycontenido : CORIZQ lista_expresiones CORDER"""
+    t[0]=ArrayContenido(t[2],t.lexer.lineno,find_column(entrada,t.slice[1]))
 
 def p_tostring(t):
     """tostring : expresion PUNTO TOSTRING PIZQ PDER
@@ -469,6 +547,15 @@ def p_as(t):
         t[0]=Casteo(t[1],t.lexer.lineno,find_column(entrada,t.slice[2]),TipoDato.I64)
     elif(t[3]=="f64"):
         t[0]=Casteo(t[1],t.lexer.lineno,find_column(entrada,t.slice[2]),TipoDato.F64)
+
+
+def p_abs(t):
+    """ abs : expresion PUNTO ABS PIZQ PDER """
+    t[0]= Nativa(t[1],1,t.lexer.lineno,find_column(entrada,t.slice[2]))
+
+def p_sqrt(t):
+    """ sqrt : expresion PUNTO SQRT PIZQ PDER """
+    t[0]= Nativa(t[1],2,t.lexer.lineno,find_column(entrada,t.slice[2]))
 
 def p_if_Expresion(t):
     """ if_e : IF expresion LLAVEIZQ expresion LLAVEDER
@@ -529,6 +616,7 @@ def p_tipo_dato(t):
                      | CHAR
                      | str
                      | STRING
+                     | USIZE
                      """
 
     if t[1] == 'i64':
@@ -541,13 +629,16 @@ def p_tipo_dato(t):
         t[0] = TipoDato.CHAR
     if t[1] == '&str':
         t[0] = TipoDato.STR
-    if t[1] == 'string':
-        print("holaaaaaaaaaaaaaaaaaa")
+    if t[1] == 'String':
         t[0] = TipoDato.STRING
+    if t[1] == 'usize':
+        t[0] = TipoDato.USIZE
 
 def p_str(t):
     """str : Y STR"""
     t[0]="&str"
+
+
 def p_error(t):
     print(f"SE ENCONTRO UN ERROR {t} En linea {t.lexer.lineno} columna {find_column(entrada,t)}")
 

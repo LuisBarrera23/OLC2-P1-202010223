@@ -110,7 +110,7 @@ def Ejecutar():
         textS.delete('1.0', END)
         textS.insert(END,s.getConsola())
         textS.config(state=DISABLED)
-
+        #print(EntornoPadre.tabla)
         errores:Error=s.getErrores()
         for e in errores:
             print(e.descripcion,e.tiempo," linea: ",e.linea," columna: ",e.columna)

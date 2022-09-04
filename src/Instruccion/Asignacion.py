@@ -1,3 +1,4 @@
+from src.Abstract.RetornoType import TipoDato
 from src.Abstract.Instruccion import Instruccion
 from src.Symbol.Symbol import Simbolo
 
@@ -22,7 +23,9 @@ class Asignacion(Instruccion):
             #print(E.tipo,exp.tipo)
             if exp.editable is False:
                 raise Exception(s.addError(Error(f"Variable {self.id} no es mutable",self.linea,self.columna)))
-            if E.tipo==exp.tipo:
+            if E.tipo==TipoDato.I64 and exp.tipo==TipoDato.USIZE:
+                entorno.modificarSimbolo(self.id,E.valor)
+            elif E.tipo==exp.tipo:
                 entorno.modificarSimbolo(self.id,E.valor)
             else:
                 raise Exception(s.addError(Error(f"Variable {self.id} no es del mismo tipo de dato que la expresion",self.linea,self.columna)))
