@@ -12,31 +12,30 @@ from src.Expresion.AccesoArreglo import AccesoArreglo
 from src.Symbol.Symbol import Simbolo
 
 
-class Len(Expresion):
-    def __init__(self,expresion,linea,columna) -> None:
+class Remove(Expresion):
+    def __init__(self,expresion,expresion2,linea,columna) -> None:
         self.expresion:Expresion=expresion
+        self.expresion2=expresion2
         self.linea=linea
         self.columna=columna
         
-    def obtenerValor(self, entorno) -> RetornoType:
+    def obtenerValor(self, entorno):
         s=Singleton.getInstance()
-        retorno=RetornoType(valor=None,tipo=TipoDato.ERROR)
 
         if isinstance(self.expresion,AccesoSimbolo):
             if entorno.existeSimbolo(self.expresion.id)==False:
                 raise Exception(s.addError(Error(f"No existe arreglo con este ID",self.linea,self.columna)))
             arreglo=entorno.obtenerSimbolo(self.expresion.id)
-            print(arreglo)
+            #print(arreglo)
             if isinstance(arreglo,ArrayInstancia):
                 #print(arreglo.tipo)
-                return RetornoType(valor=len(arreglo.valores),tipo=TipoDato.I64)
+                raise Exception(s.addError(Error(f"remove es solo para vectores",self.linea,self.columna)))
             if isinstance(arreglo,Simbolo):
-                return RetornoType(valor=len(arreglo.valor),tipo=TipoDato.I64)
+                E=self.expresion2.obtenerValor(entorno)
+                print(arreglo.valor)
+                elemento=arreglo.valor.pop(E.valor)
+                return RetornoType(valor=elemento,tipo=arreglo.tipo)
             else:
-                raise Exception(s.addError(Error(f"Esta expresion no puede ser operada con len()",self.linea,self.columna)))
+                raise Exception(s.addError(Error(f"Esta expresion no puede ser operada con remove()",self.linea,self.columna)))
         elif isinstance(self.expresion,AccesoArreglo):
-            #print(self.expresion)
-            E=self.expresion.obtenerValor(entorno)
-            #print(len(E.valor))
-            return RetornoType(valor=len(E.valor),tipo=TipoDato.I64)
-        return retorno
+            raise Exception(s.addError(Error(f"remove es solo para vectores",self.linea,self.columna)))

@@ -45,9 +45,10 @@ class Simbolo:
         self.valores=valores
         self.editable=False
 
-    def Simbolo_vector(self,identificador,dimensiones,valores,capacidad,editable=False):
+    def Simbolo_vector(self,identificador,dimensiones,valor,capacidad,tipo,editable=False):
         self.identificador=identificador
         self.dimensiones=dimensiones
-        self.valores=valores
+        self.valor=valor
         self.editable=editable
         self.capacidad=capacidad
+        self.tipo=tipo

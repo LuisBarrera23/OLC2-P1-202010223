@@ -21,6 +21,7 @@ from src.Instruccion.For import For
 from src.Instruccion.DeclaracionArreglo import DeclaracionArreglo
 from src.Instruccion.AsignacionArreglo import AsignacionArreglo
 from src.Instruccion.DeclaracionVector import DeclaracionVector
+from src.Instruccion.Push import Push
 
 
 from src.Expresion.casteo import Casteo
@@ -33,6 +34,8 @@ from src.Expresion.AccesoArreglo import AccesoArreglo
 from src.Expresion.Referencia import Referencia
 from src.Expresion.Len import Len
 from src.Expresion.Clone import Clone
+from src.Expresion.VectorContenido import VectorContenido
+from src.Expresion.Remove import Remove
 
 from src.Symbol.Parametro import Parametro
 
@@ -70,7 +73,13 @@ reservadas = {
     'abs' : 'ABS',
     'sqrt' : 'SQRT',
     'len' : 'LEN',
-    'clone' : 'CLONE'
+    'clone' : 'CLONE',
+    'vec' : 'VEC',
+    'Vec' : 'VECM',
+    'new' : 'NEW',
+    'with_capacity' : 'CAPACITY',
+    'push' : 'PUSH',
+    'remove' : 'REMOVE'
 }
 
 tokens = [
@@ -318,7 +327,8 @@ def p_instruccion(t):
                 | while
                 | continue PTCOMA
                 | for 
-                | asignacionA PTCOMA"""
+                | asignacionA PTCOMA
+                | push PTCOMA"""
     t[0]=t[1]
 
 def p_print(t):
@@ -354,13 +364,15 @@ def p_declaracion2(t):
     if len(t)==6:
         if isinstance(t[5],ArrayContenido):
             t[0]=DeclaracionArreglo(t[3],t[5],t.lexer.lineno,find_column(entrada,t.slice[1]),None,True)
-        elif isinstance(t[5],ArrayContenido):
-            t[0]=DeclaracionArreglo(t[3],t[5],t.lexer.lineno,find_column(entrada,t.slice[1]),None,True)
+        elif isinstance(t[5],VectorContenido):
+            t[0]=DeclaracionVector(t[3],t[5],t.lexer.lineno,find_column(entrada,t.slice[1]),None,True)
         else:
             t[0]=Declaracion(t[3],t[5],True,t.lexer.lineno,find_column(entrada,t.slice[1]))
     if len(t)==5:
         if isinstance(t[4],ArrayContenido):
             t[0]=DeclaracionArreglo(t[2],t[4],t.lexer.lineno,find_column(entrada,t.slice[1]),None,False)
+        elif isinstance(t[4],VectorContenido):
+            t[0]=DeclaracionVector(t[2],t[4],t.lexer.lineno,find_column(entrada,t.slice[1]),None,False)
         else:
             t[0]=Declaracion(t[2],t[4],False,t.lexer.lineno,find_column(entrada,t.slice[1]))
 # Declaraciones de Arreglos
@@ -373,6 +385,23 @@ def p_declaracion3(t):
         t[0]=DeclaracionArreglo(t[3],t[7],t.lexer.lineno,find_column(entrada,t.slice[1]),t[5],True)
     if len(t)==7:
         t[0]=DeclaracionArreglo(t[2],t[6],t.lexer.lineno,find_column(entrada,t.slice[1]),t[4],False)
+
+def p_declaracion4(t):
+    """declaracion : LET MUT ID DOBLEPT VECM MENOR tipo_dato MAYOR IGUAL expresion
+                | LET ID DOBLEPT VECM MENOR tipo_dato MAYOR IGUAL expresion """
+
+    if len(t)==11:
+        t[0]=t[0]=DeclaracionVector(t[3],t[10],t.lexer.lineno,find_column(entrada,t.slice[1]),None,True,t[7])
+        if t[10].tipodeclaracion==3:
+            t[0].nuevo=True
+        elif t[10].tipodeclaracion==4:
+            t[0].cap=True
+    if len(t)==10:
+        t[0]=t[0]=DeclaracionVector(t[2],t[9],t.lexer.lineno,find_column(entrada,t.slice[1]),None,False,t[6])
+        if t[9].tipodeclaracion==3:
+            t[0].nuevo=True
+        elif t[9].tipodeclaracion==4:
+            t[0].cap=True
 
 
 def p_dimensiones(t):
@@ -455,6 +484,10 @@ def p_for3(t):
     """ for : FOR ID IN expresion bloque"""
     t[0]=For(t[2],t[4],None,3,t[5],t.lexer.lineno,find_column(entrada,t.slice[1]))
 
+def p_push(t):
+    """ push : ID PUNTO PUSH PIZQ expresion PDER"""
+    t[0]=Push(t[1],t[5],t.lexer.lineno,find_column(entrada,t.slice[3]))
+
 def p_expresion_aritmetica(t):
     """expresion : MENOS expresion %prec UMENOS
                 | expresion MAS expresion
@@ -531,8 +564,33 @@ def p_expresiones_variadas(t):
                 | accesoarray 
                 | referencia
                 | len
-                | clone"""
+                | clone
+                | vector
+                | remove
+                """
     t[0]=t[1]
+
+def p_remove(t):
+    """ remove : expresion PUNTO REMOVE PIZQ expresion PDER"""
+    t[0]=Remove(t[1],t[5],t.lexer.lineno,find_column(entrada,t.slice[3]))
+
+
+def p_vector1(t):
+    """ vector : VEC NOT CORIZQ lista_expresiones CORDER"""
+    t[0]=VectorContenido(1,t[4],t.lexer.lineno,find_column(entrada,t.slice[2]))
+
+def p_vector2(t):
+    """ vector : VEC NOT CORIZQ expresion PTCOMA expresion CORDER"""
+    t[0]=VectorContenido(2,t[4],t.lexer.lineno,find_column(entrada,t.slice[2]),999,t[6])
+
+def p_vector3(t):
+    """ vector : VECM DOBLEPT DOBLEPT NEW PIZQ PDER"""
+    t[0]=VectorContenido(3,None,t.lexer.lineno,find_column(entrada,t.slice[2]))
+
+def p_vector4(t):
+    """ vector : VECM DOBLEPT DOBLEPT CAPACITY PIZQ expresion PDER"""
+    t[0]=VectorContenido(4,t[6],t.lexer.lineno,find_column(entrada,t.slice[2]))
+
 
 def p_clone(t):
     """ clone : expresion PUNTO CLONE PIZQ PDER """

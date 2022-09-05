@@ -61,6 +61,7 @@ class Print(Instruccion):
                         pass
                     elif i=="}":
                         if len(lista)>0:
+                            print(lista[0])
                             if isinstance(lista[0].valor,ArrayInstancia):
                                 salida+=str(lista[0].valor.valores)
                                 lista.pop(0)
