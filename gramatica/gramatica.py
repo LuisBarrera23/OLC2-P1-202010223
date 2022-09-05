@@ -270,11 +270,14 @@ def p_lista_parametros_corte(t):
 
 def p_parametro(t):
     """ parametro : ID DOBLEPT tipo_dato 
-                | ID DOBLEPT Y MUT dimensiones"""
+                | ID DOBLEPT Y MUT dimensiones
+                | ID DOBLEPT Y MUT VECM MENOR tipo_dato MAYOR"""
     if len(t)==4:
         t[0] = Parametro(t[1],t[3],t.lexer.lineno,find_column(entrada,t.slice[2]))
     elif len(t)==6:
         t[0]=Parametro(t[1],t[5],t.lexer.lineno,find_column(entrada,t.slice[2]),True)
+    elif len(t)==9:
+        t[0]=Parametro(t[1],t[7],t.lexer.lineno,find_column(entrada,t.slice[2]),True)
     
 
 def p_llamada(t):

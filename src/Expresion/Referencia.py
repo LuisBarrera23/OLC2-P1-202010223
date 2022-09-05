@@ -18,7 +18,8 @@ class Referencia(Expresion):
             raise Exception(s.addError(Error(f"Arreglo {self.id} no existe",self.linea,self.columna)))
 
         arreglo = entorno.obtenerSimbolo(self.idArreglo)
-        if isinstance(arreglo, ArrayInstancia) is not True:
-            raise Exception(s.addError(Error(f"No es referencia de un arreglo",self.linea,self.columna)))
+        # print(arreglo)
+        # if isinstance(arreglo, ArrayInstancia) is not True:
+        #     raise Exception(s.addError(Error(f"No es referencia de un arreglo",self.linea,self.columna)))
 
         return RetornoType(valor = self.idArreglo, tipo=arreglo.tipo)

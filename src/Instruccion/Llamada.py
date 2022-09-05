@@ -88,7 +88,6 @@ class Llamada(Instruccion,Expresion):
                 E:RetornoType=expresiones[i].obtenerValor(entornoN.padre)
                 #print(E.valor) #nombre original
                 #print(p.id)    #nuevo nombre
-                d=p.tipo.obtenerValor(entornoN.padre)
                 simbolo=entornoN.padre.obtenerSimbolo(E.valor)
                 #print(simbolo)
                 simbolo.identificador=p.id
