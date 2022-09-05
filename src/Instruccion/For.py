@@ -9,6 +9,9 @@ from src.Instruccion.Break import Break
 from src.Instruccion.Continue import Continue
 from src.Instruccion.Return import Return
 
+from src.Symbol.ArrayInstancia import ArrayInstancia
+from src.Expresion.AccesoSimbolo import AccesoSimbolo
+
 class For(Instruccion):
     def __init__(self, variable, valor1, valor2, tipofor, bloque,linea, columna):
         self.variable=variable
@@ -75,5 +78,35 @@ class For(Instruccion):
                         return
                     else:
                         raise Exception(s.addError(Error("Break en ciclo for no debe llevar expresiones",retorno.linea,retorno.columna)))
+        elif self.tipofor==3:
+            print("holaaaa")
+            E=self.valor1.obtenerValor(entorno)
+            vector=[]
+            print(E.valor)
+            if isinstance(E.valor,ArrayInstancia):
+                vector=E.valor.valores
+            
+
+            for n in vector:
+                env=EntornoTabla(entorno)
+                nuevo=Simbolo()
+                nuevo.Simbolo_primitivo(self.variable,n,E.valor.tipo,self.linea,self.columna,True)
+                env.agregarSimbolo(nuevo)
+                retorno=None
+                for i in self.bloque:
+                    retorno=i.Ejecutar(env)
+                    if isinstance(retorno,Return):
+                        return retorno
+                    elif isinstance(retorno,Break):
+                        break
+                    elif isinstance(retorno,Continue):
+                        break
+                if isinstance(retorno,Break):
+                    if retorno.expresion==None:
+                        return
+                    else:
+                        raise Exception(s.addError(Error("Break en ciclo for no debe llevar expresiones",retorno.linea,retorno.columna)))
+            
+
         return
         

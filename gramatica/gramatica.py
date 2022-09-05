@@ -20,6 +20,7 @@ from src.Instruccion.Continue import Continue
 from src.Instruccion.For import For
 from src.Instruccion.DeclaracionArreglo import DeclaracionArreglo
 from src.Instruccion.AsignacionArreglo import AsignacionArreglo
+from src.Instruccion.DeclaracionVector import DeclaracionVector
 
 
 from src.Expresion.casteo import Casteo
@@ -29,6 +30,9 @@ from src.Expresion.Nativas import Nativa
 from src.Expresion.ArrayContenido import ArrayContenido
 from src.Expresion.dimensionA import Dimension
 from src.Expresion.AccesoArreglo import AccesoArreglo
+from src.Expresion.Referencia import Referencia
+from src.Expresion.Len import Len
+from src.Expresion.Clone import Clone
 
 from src.Symbol.Parametro import Parametro
 
@@ -64,7 +68,9 @@ reservadas = {
     'in' : 'IN',
     'chars' : 'CHARS',
     'abs' : 'ABS',
-    'sqrt' : 'SQRT'
+    'sqrt' : 'SQRT',
+    'len' : 'LEN',
+    'clone' : 'CLONE'
 }
 
 tokens = [
@@ -206,7 +212,7 @@ precedence = (
     ('left', 'OR'),
     ('left', 'AND'),
     ('nonassoc', 'MAYOR', 'MENORIGUAL', 'MENOR', 'MAYORIGUAL', 'IGUALIGUAL', 'DIFERENTE'),
-    ('left', 'MAS', 'MENOS'),
+    ('left', 'MAS', 'MENOS' ,'PUNTO'),
     ('left', 'MULTIPLICACION', 'DIVISION', 'MODULO'),
     ('right', 'NOT', 'UMENOS')
 )
@@ -243,7 +249,7 @@ def p_funcion(t):
         t[0] = Funcion(t[2],t[7],t[8],t[4],t.lexer.lineno,find_column(entrada,t.slice[1]))
 
 def p_lista_parametros(t):
-    """ parametros : parametros COMA parametro"""
+    """ parametros : parametros COMA parametro """
     t[1].append(t[3])
     t[0] = t[1]
 
@@ -254,8 +260,13 @@ def p_lista_parametros_corte(t):
 
 
 def p_parametro(t):
-    """ parametro : ID DOBLEPT tipo_dato """
-    t[0] = Parametro(t[1],t[3],t.lexer.lineno,find_column(entrada,t.slice[2]))
+    """ parametro : ID DOBLEPT tipo_dato 
+                | ID DOBLEPT Y MUT dimensiones"""
+    if len(t)==4:
+        t[0] = Parametro(t[1],t[3],t.lexer.lineno,find_column(entrada,t.slice[2]))
+    elif len(t)==6:
+        t[0]=Parametro(t[1],t[5],t.lexer.lineno,find_column(entrada,t.slice[2]),True)
+    
 
 def p_llamada(t):
     """llamadaF : ID PIZQ PDER
@@ -343,6 +354,8 @@ def p_declaracion2(t):
     if len(t)==6:
         if isinstance(t[5],ArrayContenido):
             t[0]=DeclaracionArreglo(t[3],t[5],t.lexer.lineno,find_column(entrada,t.slice[1]),None,True)
+        elif isinstance(t[5],ArrayContenido):
+            t[0]=DeclaracionArreglo(t[3],t[5],t.lexer.lineno,find_column(entrada,t.slice[1]),None,True)
         else:
             t[0]=Declaracion(t[3],t[5],True,t.lexer.lineno,find_column(entrada,t.slice[1]))
     if len(t)==5:
@@ -361,11 +374,15 @@ def p_declaracion3(t):
     if len(t)==7:
         t[0]=DeclaracionArreglo(t[2],t[6],t.lexer.lineno,find_column(entrada,t.slice[1]),t[4],False)
 
+
 def p_dimensiones(t):
-    """ dimensiones : CORIZQ tipo_dato PTCOMA expresion CORDER
+    """ dimensiones : CORIZQ tipo_dato CORDER
+                    | CORIZQ tipo_dato PTCOMA expresion CORDER
                     | CORIZQ CORIZQ tipo_dato PTCOMA expresion CORDER PTCOMA expresion CORDER
                     | CORIZQ CORIZQ CORIZQ tipo_dato PTCOMA expresion CORDER PTCOMA expresion CORDER PTCOMA expresion CORDER"""
     arreglo=[]
+    if len(t)==4:
+        t[0]=Dimension(arreglo,t[2],t.lexer.lineno,find_column(entrada,t.slice[1]))
     if len(t)==6:
         arreglo.append(t[4])
         t[0]=Dimension(arreglo,t[2],t.lexer.lineno,find_column(entrada,t.slice[1]))
@@ -433,6 +450,10 @@ def p_for1(t):
 def p_for2(t):
     """ for : FOR ID IN expresion PUNTO CHARS PIZQ PDER bloque"""
     t[0]=For(t[2],t[4],None,2,t[9],t.lexer.lineno,find_column(entrada,t.slice[1]))
+
+def p_for3(t):
+    """ for : FOR ID IN expresion bloque"""
+    t[0]=For(t[2],t[4],None,3,t[5],t.lexer.lineno,find_column(entrada,t.slice[1]))
 
 def p_expresion_aritmetica(t):
     """expresion : MENOS expresion %prec UMENOS
@@ -507,10 +528,26 @@ def p_expresiones_variadas(t):
                 | llamadaF
                 | loop
                 | arraycontenido
-                | accesoarray """
+                | accesoarray 
+                | referencia
+                | len
+                | clone"""
     t[0]=t[1]
 
+def p_clone(t):
+    """ clone : expresion PUNTO CLONE PIZQ PDER """
+    t[0]=Clone(t[1],t.lexer.lineno,find_column(entrada,t.slice[2]))
 
+
+def p_len(t):
+    """ len : expresion PUNTO LEN PIZQ PDER """
+    t[0]=Len(t[1],t.lexer.lineno,find_column(entrada,t.slice[2]))
+
+
+def p_referencia(t):
+    """ referencia : Y MUT ID"""
+    t[0]=Referencia(t[3],t.lexer.lineno,find_column(entrada,t.slice[1]))
+    
 def p_accesoarray(t):
     """ accesoarray : ID ubicaciones """
     t[0]=AccesoArreglo(t[1],t[2],t.lexer.lineno,find_column(entrada,t.slice[1]))
@@ -561,7 +598,7 @@ def p_if_Expresion(t):
     """ if_e : IF expresion LLAVEIZQ expresion LLAVEDER
             |  IF expresion LLAVEIZQ expresion LLAVEDER ELSE LLAVEIZQ expresion LLAVEDER
             |  IF expresion LLAVEIZQ expresion LLAVEDER listaelse
-            |  IF expresion LLAVEIZQ expresion LLAVEDER listaelse ELSE LLAVEIZQ expresion LLAVEDER"""
+            |  IF expresion LLAVEIZQ instruccion expresion LLAVEDER listaelse ELSE LLAVEIZQ instruccion expresion LLAVEDER"""
 
     if len(t)==6:
         t[0]=If_e(t[2],t[4],[],None,t.lexer.lineno,find_column(entrada,t.slice[1]))
@@ -569,8 +606,8 @@ def p_if_Expresion(t):
         t[0]=If_e(t[2],t[4],t[6],None,t.lexer.lineno,find_column(entrada,t.slice[1]))
     elif len(t)==10:
         t[0]=If_e(t[2],t[4],[],t[8],t.lexer.lineno,find_column(entrada,t.slice[1]))
-    elif len(t)==11:
-        t[0]=If_e(t[2],t[4],t[6],t[9],t.lexer.lineno,find_column(entrada,t.slice[1]))
+    elif len(t)==13:
+        t[0]=If_e(t[2],t[5],t[7],t[11],t.lexer.lineno,find_column(entrada,t.slice[1]),t[4],t[10])
 
 def p_elseif_lista(t):
     """ listaelse : listaelse elseif """
@@ -582,8 +619,8 @@ def p_elseif_otra(t):
     t[0]=[t[1]]
 
 def p_elseif_def(t):
-    """elseif : ELSE IF expresion LLAVEIZQ expresion LLAVEDER"""
-    t[0]=If_e(t[3],t[5],[],None,t.lexer.lineno,find_column(entrada,t.slice[1]))
+    """elseif : ELSE IF expresion LLAVEIZQ instruccion expresion LLAVEDER"""
+    t[0]=If_e(t[3],t[6],[],None,t.lexer.lineno,find_column(entrada,t.slice[1]),t[5])
 
 def p_expresion_primitiva(t):
     """expresion : ENTERO

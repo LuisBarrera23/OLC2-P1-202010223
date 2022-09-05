@@ -1,4 +1,5 @@
 from pickle import FALSE
+from re import S
 from src.Abstract.RetornoType import TipoDato
 
 class Simbolo:
@@ -19,6 +20,9 @@ class Simbolo:
         #EXTRA PARA ARREGLOS
         self.valores=[]
         self.dimensiones=[]
+        
+        #EXTRA PARA VECTORES
+        self.capacidad=0
 
         
     def Simbolo_primitivo(self, id, valor,tipo,linea, columna, editable=False):
@@ -40,3 +44,10 @@ class Simbolo:
         self.dimensiones=dimensiones
         self.valores=valores
         self.editable=False
+
+    def Simbolo_vector(self,identificador,dimensiones,valores,capacidad,editable=False):
+        self.identificador=identificador
+        self.dimensiones=dimensiones
+        self.valores=valores
+        self.editable=editable
+        self.capacidad=capacidad

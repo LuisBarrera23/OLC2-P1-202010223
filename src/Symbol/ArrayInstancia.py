@@ -37,7 +37,7 @@ class ArrayInstancia(Simbolo):
                 raise Exception(s.addError(Error(f"Se ingreso una posicion no existente",0,0)))
             else:
                 subArreglo = valores[DimensionActual]
-                return self.Cambiar(listaDimensiones, index+1, subArreglo)
+                return self.Cambiar(listaDimensiones, index+1, subArreglo,nuevo)
         else:
             if DimensionActual > (tamanoDimension-1):
                 raise Exception(s.addError(Error(f"Se ingreso una posicion no existente",0,0)))

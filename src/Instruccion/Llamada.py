@@ -75,14 +75,29 @@ class Llamada(Instruccion,Expresion):
             raise Exception(s.addError(Error(f"No coincide la cantidad de parametros",self.linea,self.columna)))
         i=0
         for p in parametros:
-            E:RetornoType=expresiones[i].obtenerValor(entornoN.padre)
-            if E.tipo==p.tipo:
-                nueva=Simbolo()
-                nueva.Simbolo_primitivo(p.id,E.valor,E.tipo,self.linea,self.columna,True)
-                entornoN.agregarSimbolo(nueva)
-            else:
-                raise Exception(s.addError(Error(f"Tipo de Parametro no coincide con los requeridos de la funcion",self.linea,self.columna)))
-            i=i+1
+            if p.ref==False:
+                E:RetornoType=expresiones[i].obtenerValor(entornoN.padre)
+                if E.tipo==p.tipo:
+                    nueva=Simbolo()
+                    nueva.Simbolo_primitivo(p.id,E.valor,E.tipo,self.linea,self.columna,True)
+                    entornoN.agregarSimbolo(nueva)
+                else:
+                    raise Exception(s.addError(Error(f"Tipo de Parametro no coincide con los requeridos de la funcion",self.linea,self.columna)))
+                i=i+1
+            elif p.ref==True:
+                E:RetornoType=expresiones[i].obtenerValor(entornoN.padre)
+                #print(E.valor) #nombre original
+                #print(p.id)    #nuevo nombre
+                d=p.tipo.obtenerValor(entornoN.padre)
+                simbolo=entornoN.padre.obtenerSimbolo(E.valor)
+                #print(simbolo)
+                simbolo.identificador=p.id
+                #print(simbolo)
+                entornoN.agregarSimbolo(simbolo)
+                # print(entornoN.obtenerSimbolo(p.id))
+                # print(entornoN.padre.existeSimboloEnEntornoActual(E.valor))
+                # print(entornoN.padre.existeSimboloEnEntornoActual(p.id))
+                i=i+1
         
 
     

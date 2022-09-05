@@ -25,10 +25,10 @@ class Funcion(Instruccion):
         s=Singleton.getInstance()
         AST=self.bloque
         for i in AST:
-            i.Ejecutar(entorno)
+            #i.Ejecutar(entorno)
             try:
                 """"""
-                #i.Ejecutar(entorno)
+                i.Ejecutar(entorno)
             except:
                 print("error")
         
